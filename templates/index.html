@@ -5,6 +5,10 @@
     <!-- 优化点1: 更新 viewport meta 标签，明确允许缩放并设置最大比例 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0">
     <title>XQ物品代码查询工具</title>
+
+    <!-- 新增：站点图标（Favicon） -->
+    <link rel="icon" href="https://gh-proxy.com/https://raw.githubusercontent.com/jfjdjdhsj/tubiao/refs/heads/main/gaituba.com_crop-round.jpg" type="image/jpeg">
+
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -42,6 +46,21 @@
             border-radius: 12px; /* 更圆润的边角 */
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* 更明显的阴影 */
             text-align: center;
+        }
+        /* 新增：Logo 容器与图片样式 */
+        .logo-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .logo-wrap img {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+            user-select: none;
+            -webkit-user-drag: none;
         }
         h1 {
             color: #34495e; /* 更深的蓝色标题 */
@@ -167,6 +186,16 @@
     <!-- 顶部重复的 "物品代码查询工具" 已删除 -->
 
     <div class="container">
+        <!-- 新增：Logo 展示 -->
+        <div class="logo-wrap">
+            <img
+                src="https://gh-proxy.com/https://raw.githubusercontent.com/jfjdjdhsj/tubiao/refs/heads/main/gaituba.com_crop-round.jpg"
+                alt="网站标识 Logo"
+                loading="lazy"
+                onerror="this.style.display='none';"
+            >
+        </div>
+
         <h1>XQ物品代码查询</h1>
 
         {% if error_message %}
