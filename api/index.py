@@ -11,6 +11,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # '..' 表示从 'api' 目录向上一个级别，即项目根目录
 DATA_DIR = os.path.join(BASE_DIR, '..', 'data')
 
+# 更新文件路径以适应 Vercel 结构
 code_table_path = os.path.join(DATA_DIR, "代码表.txt")
 subway_code_table_path = os.path.join(DATA_DIR, "和平地铁美化代码.h")
 
@@ -32,12 +33,13 @@ def setup_logging():
         # 移除 filename 参数，日志将默认输出到 stderr，通过 stream=sys.stdout 明确指定
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
-        encoding="utf-8",
+        # encoding="utf-8", # Vercel环境可能默认支持UTF-8，也可以显式声明
         stream=sys.stdout # 将日志重定向到标准输出
     )
     logging.getLogger(__name__).info("Vercel 日志文件配置完成 (输出到 stdout)")
 
-setup_logging() # 确保日志在应用启动时配置
+# 在应用启动时立即配置日志
+setup_logging()
 logger = logging.getLogger(__name__)
 
 
@@ -82,9 +84,9 @@ def parse_generic_code_table(file_path, encoding):
                     else:
                         sub_to_main[id2] = parent_id
                 except ValueError:
-                    logger.warning(f"通用代码表解析错误，无法转换ID: {line}")
+                    logger.warning(f"通用代码表解析错误，无法转换ID: '{line}'")
     except FileNotFoundError:
-        logger.error(f"错误: 通用代码表文件未找到或路径不正确: {file_path}")
+        logger.error(f"错误: 通用代码表文件未找到或路径不正确: '{file_path}'")
     except Exception as e:
         logger.exception(f"解析通用代码表时发生未知错误: {e}")
     return parsed_items, main_weapons, sub_to_main
@@ -108,11 +110,11 @@ def parse_subway_code_table_file(file_path, encoding):
                         hex_code = match.group(3)
                         parsed_subway_items[item_id] = {"name": name, "hex_code": hex_code}
                     except ValueError:
-                        logger.warning(f"地铁代码表解析错误，无法转换ID或Hex Code: {line}")
+                        logger.warning(f"地铁代码表解析错误，无法转换ID或Hex Code: '{line}'")
                 else:
-                    logger.warning(f"地铁代码表格式不匹配，跳过行: {line}")
+                    logger.warning(f"地铁代码表格式不匹配，跳过行: '{line}'")
     except FileNotFoundError:
-        logger.error(f"错误: 地铁美化代码表文件未找到或路径不正确: {file_path}")
+        logger.error(f"错误: 地铁美化代码表文件未找到或路径不正确: '{file_path}'")
     except Exception as e:
         logger.exception(f"解析地铁美化代码表时发生未知错误: {e}")
     return parsed_subway_items
@@ -128,33 +130,51 @@ def load_code_table():
     subway_item_dict = {}
 
     # 加载通用物品代码表
-    try:
-        temp_item_dict, temp_main_weapon_dict, temp_sub_to_main_dict = parse_generic_code_table(code_table_path, 'utf-8')
-        item_dict.update(temp_item_dict)
-        main_weapon_dict.update(temp_main_weapon_dict)
-        sub_to_main_dict.update(temp_sub_to_main_dict)
-    except UnicodeDecodeError:
-        logger.warning(f"通用代码表 UTF-8 解码失败，尝试 GBK 解码文件: {code_table_path}")
-        temp_item_dict, temp_main_weapon_dict, temp_sub_to_main_dict = parse_generic_code_table(code_table_path, 'gbk')
-        item_dict.update(temp_item_dict)
-        main_weapon_dict.update(temp_main_weapon_dict)
-        sub_to_main_dict.update(temp_sub_to_main_dict)
-    except Exception as e:
-        logger.error(f"加载通用代码表时发生错误: {e}")
+    try_encodings = ['utf-8', 'gbk']
+    loaded_general = False
+    for encoding in try_encodings:
+        try:
+            temp_item_dict, temp_main_weapon_dict, temp_sub_to_main_dict = parse_generic_code_table(code_table_path, encoding)
+            item_dict.update(temp_item_dict)
+            main_weapon_dict.update(temp_main_weapon_dict)
+            sub_to_main_dict.update(temp_sub_to_main_dict)
+            loaded_general = True
+            logger.info(f"通用代码表 '{code_table_path}' 使用 {encoding} 编码加载成功。")
+            break # 成功加载则跳出循环
+        except UnicodeDecodeError:
+            logger.warning(f"通用代码表 '{code_table_path}' 使用 {encoding} 编码解码失败。")
+        except FileNotFoundError:
+            logger.error(f"通用代码表文件未找到: '{code_table_path}'。")
+            break # 文件不存在，无需尝试其他编码
+        except Exception as e:
+            logger.error(f"加载通用代码表时发生未知错误: {e}")
+            break
+    if not loaded_general and not os.path.exists(code_table_path):
+         logger.error(f"经过所有尝试，通用代码表 '{code_table_path}' 未能加载。")
 
 
     # 加载地铁美化代码表
-    try:
-        temp_subway_item_dict = parse_subway_code_table_file(subway_code_table_path, 'utf-8')
-        subway_item_dict.update(temp_subway_item_dict)
-    except UnicodeDecodeError:
-        logger.warning(f"地铁美化代码表 UTF-8 解码失败，尝试 GBK 解码文件: {subway_code_table_path}")
-        temp_subway_item_dict = parse_subway_code_table_file(subway_code_table_path, 'gbk')
-        subway_item_dict.update(temp_subway_item_dict)
-    except Exception as e:
-        logger.error(f"加载地铁美化代码表时发生错误: {e}")
+    loaded_subway = False
+    for encoding in try_encodings:
+        try:
+            temp_subway_item_dict = parse_subway_code_table_file(subway_code_table_path, encoding)
+            subway_item_dict.update(temp_subway_item_dict)
+            loaded_subway = True
+            logger.info(f"地铁美化代码表 '{subway_code_table_path}' 使用 {encoding} 编码加载成功。")
+            break # 成功加载则跳出循环
+        except UnicodeDecodeError:
+            logger.warning(f"地铁美化代码表 '{subway_code_table_path}' 使用 {encoding} 编码解码失败。")
+        except FileNotFoundError:
+            logger.error(f"地铁美化代码表文件未找到: '{subway_code_table_path}'。")
+            break # 文件不存在，无需尝试其他编码
+        except Exception as e:
+            logger.error(f"加载地铁美化代码表时发生未知错误: {e}")
+            break
+    if not loaded_subway and not os.path.exists(subway_code_table_path):
+        logger.error(f"经过所有尝试，地铁美化代码表 '{subway_code_table_path}' 未能加载。")
 
-    logger.info(f"加载完成: 总物品 {len(item_dict)}, 主枪 {len(main_weapon_dict)}, 地铁美化 {len(subway_item_dict)}")
+
+    logger.info(f"所有代码表加载完成: 总物品 {len(item_dict)}, 主枪 {len(main_weapon_dict)}, 地铁美化 {len(subway_item_dict)}")
 
 # ==================== 查询函数 ====================
 def query_item(codes):
@@ -175,10 +195,11 @@ def query_item(codes):
     return ", ".join(results)
 
 # ==================== Flask 应用 ====================
+# template_folder 必须是相对于此文件 (api/index.py) 的路径
 app = Flask(__name__, template_folder=os.path.join(BASE_DIR, '..', 'templates')) # 指定模板文件夹路径
 
-# 在Vercel上，应用启动时会执行这里的代码。
-# 确保在 app 实例创建后立即加载代码表。
+# 在 Vercel 上，应用启动时会执行这里的代码。
+# 确保在 app 实例创建后立即加载代码表，这样第一次请求到达时数据就可用。
 load_code_table()
 logger.info("代码表在 Flask 应用启动时已加载。")
 
@@ -204,33 +225,38 @@ def index():
                     results.append("")
                     continue
 
+                # 匹配行首可选的空白字符后跟着一个或多个数字，数字之间可选地用逗号和空白分隔
                 id_match = re.match(r"^\s*(\d+(?:\s*,\s*\d+)*)", stripped_line)
 
                 if not id_match:
-                    results.append(stripped_line)
+                    results.append(stripped_line) # 如果不匹配数字，则原样返回该行
                     continue
 
-                numbers_str = id_match.group(1)
+                numbers_str = id_match.group(1) # 提取匹配到的数字字符串部分
                 numbers = []
                 try:
+                    # 使用正则表达式查找所有数字，并转换为整数
                     numbers = [int(n) for n in re.findall(r"\d+", numbers_str)]
                 except ValueError:
-                    logger.warning(f"无法解析行首数字，跳过行: {line}")
+                    logger.warning(f"无法解析行首数字，跳过行: '{line}'")
                     results.append(stripped_line)
                     continue
 
-                if not numbers:
+                if not numbers: # 如果提取不到任何数字（理论上id_match.group(1)会保证有，但多做一层检查）
                     results.append(stripped_line)
                     continue
 
                 final_comment_from_bot = query_item(numbers)
                 id_string = ", ".join(map(str, numbers))
 
+                # 构建输出行：如果有查询结果，则在ID后添加 # 和结果
                 output_line = f"{id_string} #{final_comment_from_bot}" if final_comment_from_bot else id_string
+                # 将处理后的行添加到结果列表
                 results.append(output_line.strip())
 
             final_text = "\n".join(results)
             logger.info(f"处理完成，结果文本长度: {len(final_text)}")
+
 
     # 返回渲染后的模板
     return render_template('index.html', final_text=final_text, error_message=error_message)
