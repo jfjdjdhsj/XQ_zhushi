@@ -1,207 +1,236 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0">
-    <title>XQ物品代码查询工具</title>
-
-    <!-- 仅保留 favicon，不在网页显示 -->
+<!DOCTYPE html>  
+<html lang="zh-CN">  
+<head>  
+    <meta charset="UTF-8">  
+    <!-- 优化点1: 更新 viewport meta 标签，明确允许缩放并设置最大比例 -->  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=3.0">  
+    <title>XQ物品代码查询工具</title>  
     <link rel="icon" href="https://gh-proxy.com/https://raw.githubusercontent.com/jfjdjdhsj/tubiao/refs/heads/main/gaituba.com_crop-round.jpg" type="image/jpeg">
+    <style>  
+        body {  
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;  
+            margin: 0;  
+            padding: 0;  
+            background-color: #f0f2f5; /* 类似图片中的淡灰色背景 */  
+            color: #333;  
+            line-height: 1.6;  
+            display: flex;  
+            flex-direction: column;  
+            align-items: center;  
+            min-height: 100vh; /* 确保内容居中 */  
+            /* 优化点1: 隐藏水平滚动条，防止意外横向滑动 */  
+            overflow-x: hidden;   
+        }  
+        /* .header 样式不再需要，因为元素已被删除 */  
+        /* .header {  
+            width: 100%;  
+            padding: 15px 20px;  
+            background-color: #ffffff;  
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);  
+            text-align: center;  
+            font-size: 1.2em;  
+            font-weight: 600;  
+            color: #2c3e50;  
+            margin-bottom: 20px;  
+        } */  
+        .container {  
+            max-width: 600px; /* 调整最大宽度以匹配手机界面 */  
+            width: 90%; /* 响应式宽度 */  
+            /* 修正点: 移除顶部的 20px 外边距 */  
+            margin: 0 auto 20px auto; /* 顶部0，左右自动，底部20px */  
+            background-color: #ffffff;  
+            padding: 30px;  
+            border-radius: 12px; /* 更圆润的边角 */  
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1); /* 更明显的阴影 */  
+            text-align: center;  
+        }  
+        h1 {  
+            color: #34495e; /* 更深的蓝色标题 */  
+            margin-top: 0;  
+            margin-bottom: 25px;  
+            font-size: 1.8em;  
+        }  
+        label {  
+            display: block;  
+            text-align: left;  
+            margin-bottom: 10px;  
+            font-weight: 500;  
+            color: #555;  
+        }  
+        textarea {  
+            width: calc(100% - 20px);  
+            padding: 12px;  
+            margin-bottom: 20px;  
+            border: 1px solid #dcdfe6; /* 边框颜色 */  
+            border-radius: 8px; /* 圆润的输入框 */  
+            font-size: 1em;  
+            resize: vertical;  
+            min-height: 180px; /* 增加高度 */  
+            box-sizing: border-box;  
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;  
+        }  
+        textarea:focus {  
+            border-color: #3498db;  
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);  
+            outline: none;  
+        }  
+        .button-group {  
+            display: flex;  
+            flex-wrap: wrap; /* 按钮多时可换行 */  
+            justify-content: center;  
+            gap: 15px; /* 按钮间距 */  
+            margin-bottom: 20px;  
+        }  
+        button {  
+            background-color: #4a90e2; /* 蓝色按钮 */  
+            color: white;  
+            padding: 12px 25px;  
+            border: none;  
+            border-radius: 25px; /* 更圆润的按钮 */  
+            cursor: pointer;  
+            font-size: 1.05em;  
+            font-weight: 500;  
+            transition: background-color 0.3s ease, transform 0.1s ease;  
+            min-width: 140px; /* 确保按钮有最小宽度 */  
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  
+        }  
+        button:hover {  
+            background-color: #3a7bd5;  
+            transform: translateY(-2px);  
+        }  
+        button:active {  
+            transform: translateY(0);  
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);  
+        }  
+        .result-section {  
+            margin-top: 30px;  
+            text-align: left;  
+            width: 100%;  
+        }  
+        .result-section h2 {  
+            font-size: 1.4em;  
+            color: #34495e;  
+            margin-bottom: 15px;  
+        }  
+        .result-area {  
+            background-color: #ecf0f1;  
+            padding: 15px;  
+            border-radius: 8px;  
+            border: 1px solid #dcdfe6;  
+            white-space: pre-wrap;  
+            word-wrap: break-word;  
+            min-height: 120px;  
+            font-family: 'Courier New', Courier, monospace;  
+            font-size: 0.95em;  
+            color: #333;  
+            text-align: left;  
+        }  
+        .action-buttons {  
+            margin-top: 20px;  
+            text-align: right;  
+            display: flex; /* 按钮并排 */  
+            justify-content: flex-end; /* 靠右对齐 */  
+            gap: 10px; /* 按钮间距 */  
+            /* 优化点2: 确保辅助按钮也能换行 */  
+            flex-wrap: wrap;   
+        }  
+        .action-buttons button {  
+            background-color: #6c757d; /* 辅助按钮颜色 */  
+            min-width: unset; /* 取消最小宽度限制 */  
+            /* 优化点2: 减小 padding 和 font-size，使按钮更紧凑 */  
+            padding: 8px 15px;   
+            border-radius: 20px;  
+            font-size: 0.9em;   
+            box-shadow: none;  
+        }  
+        .action-buttons button:hover {  
+            background-color: #5a6268;  
+            transform: translateY(-1px);  
+        }  
+        .error-message {  
+            color: #e74c3c;  
+            background-color: #fcecec;  
+            border: 1px solid #e74c3c;  
+            padding: 12px;  
+            border-radius: 8px;  
+            margin-bottom: 20px;  
+            text-align: left;  
+        }  
+        .footer-info {  
+            margin-top: 30px;  
+            font-size: 0.9em;  
+            color: #7f8c8d;  
+            text-align: center;  
+        }  
+    </style>  
+</head>  
+<body>  
+    <!-- 顶部重复的 "物品代码查询工具" 已删除 -->  
+    <div class="container">  
+        <h1>XQ物品代码查询</h1>  
 
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f2f5;
-            color: #333;
-            line-height: 1.6;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        .container {
-            max-width: 600px;
-            width: 90%;
-            margin: 0 auto 20px auto;
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
-            text-align: center;
-        }
-        h1 {
-            color: #34495e;
-            margin-top: 0;
-            margin-bottom: 25px;
-            font-size: 1.8em;
-        }
-        label {
-            display: block;
-            text-align: left;
-            margin-bottom: 10px;
-            font-weight: 500;
-            color: #555;
-        }
-        textarea {
-            width: calc(100% - 20px);
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #dcdfe6;
-            border-radius: 8px;
-            font-size: 1em;
-            resize: vertical;
-            min-height: 180px;
-            box-sizing: border-box;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        textarea:focus {
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
-            outline: none;
-        }
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        button {
-            background-color: #4a90e2;
-            color: white;
-            padding: 12px 25px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 1.05em;
-            font-weight: 500;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            min-width: 140px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        button:hover {
-            background-color: #3a7bd5;
-            transform: translateY(-2px);
-        }
-        button:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .result-section {
-            margin-top: 30px;
-            text-align: left;
-            width: 100%;
-        }
-        .result-section h2 {
-            font-size: 1.4em;
-            color: #34495e;
-            margin-bottom: 15px;
-        }
-        .result-area {
-            background-color: #ecf0f1;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #dcdfe6;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            min-height: 120px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.95em;
-            color: #333;
-            text-align: left;
-        }
-        .action-buttons {
-            margin-top: 20px;
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .action-buttons button {
-            background-color: #6c757d;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9em;
-            box-shadow: none;
-        }
-        .action-buttons button:hover {
-            background-color: #5a6268;
-            transform: translateY(-1px);
-        }
-        .error-message {
-            color: #e74c3c;
-            background-color: #fcecec;
-            border: 1px solid #e74c3c;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        .footer-info {
-            margin-top: 30px;
-            font-size: 0.9em;
-            color: #7f8c8d;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>XQ物品代码查询</h1>
+        {% if error_message %}  
+            <div class="error-message">  
+                {{ error_message }}  
+            </div>  
+        {% endif %}  
 
-        {% if error_message %}
-            <div class="error-message">
-                {{ error_message }}
-            </div>
-        {% endif %}
+        <form method="POST" action="/">  
+            <label for="user_input">请输入要查询的代码,支持经典和地铁：</label>  
+            <textarea id="user_input" name="user_input" placeholder="输入你要查询的美化代码"></textarea>  
+              
+            <div class="button-group">  
+                <button type="submit">查询</button>  
+                <button type="reset" onclick="document.getElementById('user_input').value=''; document.querySelector('.result-area').innerText='';">清空</button>  
+            </div>  
+        </form>  
 
-        <form method="POST" action="/">
-            <label for="user_input">请输入要查询的代码,支持经典和地铁：</label>
-            <textarea id="user_input" name="user_input" placeholder="输入你要查询的美化代码"></textarea>
-            
-            <div class="button-group">
-                <button type="submit">查询</button>
-                <button type="reset" onclick="document.getElementById('user_input').value=''; document.querySelector('.result-area').innerText='';">清空</button>
-            </div>
-        </form>
+        <div class="result-section">  
+            <h2>查询结果</h2>  
+            <div class="result-area">{{ final_text }}</div>  
+            <div class="action-buttons">  
+                <button onclick="navigator.clipboard.writeText(document.querySelector('.result-area').innerText);">复制结果</button>  
+                <button onclick="document.querySelector('.result-area').innerText='';">清空结果</button>  
+                <button onclick="downloadResultAsFile('配置.txt');">保存为文件</button>   
+            </div>  
+        </div>  
 
-        <div class="result-section">
-            <h2>查询结果</h2>
-            <div class="result-area">{{ final_text }}</div>
-            <div class="action-buttons">
-                <button onclick="navigator.clipboard.writeText(document.querySelector('.result-area').innerText);">复制结果</button>
-                <button onclick="document.querySelector('.result-area').innerText='';">清空结果</button>
-                <button onclick="downloadResultAsFile('配置.txt');">保存为文件</button> 
-            </div>
-        </div>
+        <div class="footer-info">  
+            &copy; 2025 物品代码查询工具. All rights reserved.  
+        </div>  
+    </div>  
 
-        <div class="footer-info">
-            &copy; 2025 物品代码查询工具. All rights reserved.
-        </div>
-    </div>
+    <script>  
+        function downloadResultAsFile(filename) {  
+            const resultArea = document.querySelector('.result-area');  
+            const content = resultArea.innerText; // 获取查询结果的文本内容  
 
-    <script>
-        function downloadResultAsFile(filename) {
-            const resultArea = document.querySelector('.result-area');
-            const content = resultArea.innerText;
-            if (!content.trim()) {
-                alert('查询结果为空，无法保存为文件！');
-                return;
-            }
-            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            alert('文件 ' + filename + ' 已准备下载。请检查您的设备下载文件夹。');
-        }
-    </script>
-</body>
+            if (!content.trim()) {  
+                alert('查询结果为空，无法保存为文件！');  
+                return;  
+            }  
+
+            // 1. 创建 Blob 对象：将文本内容封装成一个文件类型的数据  
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });  
+
+            // 2. 创建一个临时的 URL，指向这个 Blob 对象  
+            const url = URL.createObjectURL(blob);  
+
+            // 3. 创建一个隐藏的 <a> 元素（下载链接）  
+            const a = document.createElement('a');  
+            a.href = url;  
+            a.download = filename; // 设置下载的文件名  
+
+            // 4. 将这个链接添加到页面上（虽然是隐藏的）并模拟点击  
+            document.body.appendChild(a);  
+            a.click();  
+
+            // 5. 清理：移除临时链接并释放 Blob URL 占用的内存  
+            document.body.removeChild(a);  
+            URL.revokeObjectURL(url);  
+
+            alert('文件 ' + filename + ' 已准备下载。请检查您的设备下载文件夹。');  
+        }  
+    </script>  
+</body>  
 </html>
